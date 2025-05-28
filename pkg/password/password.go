@@ -19,22 +19,23 @@ import (
 
 const (
 	// LowerLetters is the list of lowercase letters.
-	lowerLettersDefault = "abcdefghijklmnopqrstuvwxyz"
+	LowerLettersDefault = "abcdefghijklmnopqrstuvwxyz"
 
 	// UpperLetters is the list of uppercase letters.
-	upperLettersDefault = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	UpperLettersDefault = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 	// Digits is the list of permitted digits.
-	digitsDefault = "0123456789"
+	DigitsDefault = "0123456789"
 
 	// Symbols is the list of symbols.
-	symbolsDefault = "!@#$%^&*()_+"
+	SymbolsDefault = "!@#$%^&*()_+"
 
 	// Don't allow repeat by default
-	allowRepeatDefault = false
+	AllowRepeatDefault = false
 )
 
-type password struct {
+// Represent the configuration for the generator.
+type Password struct {
 	LowerLetters string
 	UpperLetters string
 	Digits       string
@@ -48,19 +49,19 @@ type password struct {
 // Default values:
 //   - "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+"
 //   - Don't allow repeat by default.
-func NewPassword() *password {
-	return &password{
-		LowerLetters: lowerLettersDefault,
-		UpperLetters: upperLettersDefault,
-		Digits:       digitsDefault,
-		Symbols:      symbolsDefault,
-		AllowRepeat:  allowRepeatDefault,
+func NewPassword() *Password {
+	return &Password{
+		LowerLetters: LowerLettersDefault,
+		UpperLetters: UpperLettersDefault,
+		Digits:       DigitsDefault,
+		Symbols:      SymbolsDefault,
+		AllowRepeat:  AllowRepeatDefault,
 	}
 }
 
 // Generates a password with the given requirements. length is the
 // total number of characters in the password.
-func (p *password) Generate(length int) (string, error) {
+func (p *Password) Generate(length int) (string, error) {
 
 	var availableChars string = p.UpperLetters + p.LowerLetters + p.Digits + p.Symbols
 

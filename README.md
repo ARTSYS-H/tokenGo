@@ -1,7 +1,7 @@
 # tokenGo
 
 Welcome to **tokenGo**, a repository where I share small utility developed in Go, to generate token, password and others.
-These projects are primarily created as part of a **learning**, **experimental** and personal use initiative.
+These projects are primarily created as part of a **learning**, **experimental** and **personal** use initiative.
 
 ## :art: Inspirations
 
