@@ -1,28 +1,21 @@
 package main
 
 import (
+	_ "embed"
 	"fmt"
 	"os"
 
 	"github.com/ARTSYS-H/tokenGo/internal/passwordcli"
 )
 
-const help = `tokenGo is a collection of command to generates token.
-
-Usage:
-
-	tokenGo <command> [arguments]
-
-The commands are:
-
-	password	generate a password string
-
-Use "tokenGo help <command>" for more information about a command.`
+//go:embed help.txt
+var help string
 
 type SubCommand interface {
 	Init([]string) error
 	Run() error
 	GetName() string
+	ShowHelp()
 }
 
 func root(args []string) error {
@@ -38,8 +31,19 @@ func root(args []string) error {
 	subcommand := args[1]
 
 	if subcommand == "help" {
-		fmt.Println(help)
-		return nil
+		if len(args) <= 2 {
+			fmt.Println(help)
+			return nil
+		}
+
+		for _, cmd := range commands {
+			if cmd.GetName() == args[2] {
+				cmd.ShowHelp()
+				return nil
+			}
+		}
+
+		return fmt.Errorf("tokenGo help %s: unknown topic help. Run 'tokenGo help'.", args[2])
 	}
 
 	for _, cmd := range commands {
@@ -52,7 +56,7 @@ func root(args []string) error {
 		}
 	}
 
-	return fmt.Errorf("%s: Unknown command\nRun 'help' for usage.", subcommand)
+	return fmt.Errorf("tokenGo %s: Unknown command\nRun 'tokenGo help' for usage.", subcommand)
 }
 
 func main() {
