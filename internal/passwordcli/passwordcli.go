@@ -46,6 +46,9 @@ func (sb *PasswordCommand) Init(args []string) error {
 
 func (sb *PasswordCommand) Run() error {
 	generatedPassword, err := sb.generator.Generate(*sb.passwordLength)
+	if err != nil {
+		return err
+	}
 	fmt.Println(generatedPassword)
-	return err
+	return nil
 }

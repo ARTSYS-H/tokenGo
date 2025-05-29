@@ -63,6 +63,6 @@ func main() {
 	err := root(os.Args)
 	if err != nil {
 		fmt.Println(err)
-		os.Exit(0)
+		os.Exit(1)
 	}
 }

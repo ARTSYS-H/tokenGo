@@ -13,6 +13,7 @@ package password
 
 import (
 	"crypto/rand"
+	"fmt"
 	"math/big"
 	"slices"
 )
@@ -67,6 +68,11 @@ func (p *Password) Generate(length int) (string, error) {
 	var availableChars string = p.UpperLetters + p.LowerLetters + p.Digits + p.Symbols
 
 	chars := []rune(availableChars)
+
+	// no infinity loop if length exceeds available runes
+	if len(chars) < length && !p.AllowRepeat {
+		return "", fmt.Errorf("length exceeds available runes and repeats are not allowed")
+	}
 
 	// Create a rune slice for the password
 	passwd := make([]rune, length)
