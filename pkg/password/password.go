@@ -63,23 +63,30 @@ func NewPassword() *Password {
 // total number of characters in the password.
 func (p *Password) Generate(length int) (string, error) {
 
+	// Define the possible characters
 	var availableChars string = p.UpperLetters + p.LowerLetters + p.Digits + p.Symbols
 
 	chars := []rune(availableChars)
 
+	// Create a rune slice for the password
 	passwd := make([]rune, length)
 
+	// Fill the slice with random characters
 	for i := 0; i < length; i++ {
 	NoRepeat:
+		// Generate a random index
 		index, err := rand.Int(rand.Reader, big.NewInt(int64(len(chars))))
 		if err != nil {
 			return "", err
 		}
+		// if a repetition is found retry to generate a random index
 		if !p.AllowRepeat && slices.Contains(passwd, chars[index.Int64()]) {
 			goto NoRepeat
 		}
+		// Add the corresponding character to the random index
 		passwd[i] = chars[index.Int64()]
 	}
 
+	// Return the password as a string
 	return string(passwd), nil
 }
