@@ -8,9 +8,9 @@ import (
 )
 
 type PasswordCommand struct {
-	fs             *flag.FlagSet
-	generator      *password.Password
-	passwordLength *int
+	Fs             *flag.FlagSet
+	Generator      *password.Password
+	PasswordLength *int
 }
 
 func NewPasswordCommand() *PasswordCommand {
@@ -25,27 +25,18 @@ func NewPasswordCommand() *PasswordCommand {
 	})
 
 	return &PasswordCommand{
-		fs:             fs,
-		generator:      gen,
-		passwordLength: passSize,
+		Fs:             fs,
+		Generator:      gen,
+		PasswordLength: passSize,
 	}
 }
 
-func (sb *PasswordCommand) ShowHelp() {
-	fmt.Printf("Usage of %s:\n", sb.fs.Name())
-	sb.fs.PrintDefaults()
-}
-
-func (sb *PasswordCommand) GetName() string {
-	return sb.fs.Name()
-}
-
 func (sb *PasswordCommand) Init(args []string) error {
-	return sb.fs.Parse(args)
+	return sb.Fs.Parse(args)
 }
 
 func (sb *PasswordCommand) Run() error {
-	generatedPassword, err := sb.generator.Generate(*sb.passwordLength)
+	generatedPassword, err := sb.Generator.Generate(*sb.PasswordLength)
 	if err != nil {
 		return err
 	}
