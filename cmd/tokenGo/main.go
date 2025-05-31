@@ -18,36 +18,47 @@ type SubCommand interface {
 	ShowHelp()
 }
 
-func root(args []string) error {
+type Cli struct {
+	name        string
+	subcommands []SubCommand
+	help        string
+}
+
+func NewCli(name, helpText string) *Cli {
+	return &Cli{
+		name: name,
+		help: helpText,
+	}
+}
+
+func (c *Cli) Add(cmds ...SubCommand) {
+	c.subcommands = append(c.subcommands, cmds...)
+}
+
+func (c *Cli) Run(args []string) error {
 	if len(args) <= 1 {
-		fmt.Println(help)
+		fmt.Println(c.help)
 		return nil
 	}
 
-	commands := []SubCommand{
-		passwordcli.NewPasswordCommand(),
-	}
-
-	subcommand := args[1]
-
-	if subcommand == "help" {
+	if args[1] == "help" {
 		if len(args) <= 2 {
-			fmt.Println(help)
+			fmt.Println(c.help)
 			return nil
 		}
 
-		for _, cmd := range commands {
+		for _, cmd := range c.subcommands {
 			if cmd.GetName() == args[2] {
 				cmd.ShowHelp()
 				return nil
 			}
 		}
 
-		return fmt.Errorf("tokenGo help %s: unknown topic help. Run 'tokenGo help'.", args[2])
+		return fmt.Errorf("%s help %s: unknown topic help. Run '%s help'.", c.name, args[2], c.name)
 	}
 
-	for _, cmd := range commands {
-		if cmd.GetName() == subcommand {
+	for _, cmd := range c.subcommands {
+		if cmd.GetName() == args[1] {
 			err := cmd.Init(args[2:])
 			if err != nil {
 				return err
@@ -56,11 +67,13 @@ func root(args []string) error {
 		}
 	}
 
-	return fmt.Errorf("tokenGo %s: Unknown command\nRun 'tokenGo help' for usage.", subcommand)
+	return fmt.Errorf("%s %s: Unknown command\nRun '%s help'.", c.name, args[1], c.name)
 }
 
 func main() {
-	err := root(os.Args)
+	command := NewCli("tokenGo", help)
+	command.Add(passwordcli.NewPasswordCommand())
+	err := command.Run(os.Args)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
