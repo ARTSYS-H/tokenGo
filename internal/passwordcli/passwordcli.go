@@ -11,6 +11,7 @@ type PasswordCommand struct {
 	Fs             *flag.FlagSet
 	Generator      *password.Password
 	PasswordLength *int
+	Description    string
 }
 
 func NewPasswordCommand() *PasswordCommand {
@@ -28,11 +29,8 @@ func NewPasswordCommand() *PasswordCommand {
 		Fs:             fs,
 		Generator:      gen,
 		PasswordLength: passSize,
+		Description:    "generate a password string",
 	}
-}
-
-func (sb *PasswordCommand) Init(args []string) error {
-	return sb.Fs.Parse(args)
 }
 
 func (sb *PasswordCommand) Run() error {
