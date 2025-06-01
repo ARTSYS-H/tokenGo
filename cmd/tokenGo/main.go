@@ -6,15 +6,12 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"regexp"
 
 	"github.com/ARTSYS-H/tokenGo/internal/passwordcli"
 )
 
-//go:embed help.txt
-var help string
-
 type SubCommand interface {
-	Init([]string) error
 	Run() error
 }
 
@@ -22,17 +19,10 @@ type Cli struct {
 	name        string
 	subcommands []SubCommand
 	args        []string
-	help        string
+	description string
 }
 
-func NewCli(name, helpText string) *Cli {
-	return &Cli{
-		name: name,
-		help: helpText,
-	}
-}
-
-func (c *Cli) Add(cmds ...SubCommand) {
+func (c *Cli) AddCommand(cmds ...SubCommand) {
 	c.subcommands = append(c.subcommands, cmds...)
 }
 
@@ -61,9 +51,63 @@ func inspectAndAccessFlagSetField(sub SubCommand) (*flag.FlagSet, error) {
 	return flagSetField, nil
 }
 
+func inspectAndAccessDescriptionField(sub SubCommand) (string, error) {
+
+	valueOfSub := reflect.ValueOf(sub)
+
+	for valueOfSub.Kind() == reflect.Interface || valueOfSub.Kind() == reflect.Ptr {
+		valueOfSub = valueOfSub.Elem()
+	}
+
+	if valueOfSub.Kind() == reflect.Struct {
+		field := valueOfSub.FieldByName("Description")
+		if field.IsValid() {
+			return field.String(), nil
+		} else {
+			return "", nil
+		}
+	} else {
+		return "", fmt.Errorf("Sub does not contain a valid struct")
+	}
+}
+
+func (c *Cli) generateMainHelpMessage() (string, error) {
+	var helpMessage string
+
+	helpMessage += fmt.Sprintf("%s\n", c.description)
+	helpMessage += "\n"
+	helpMessage += "Usage:\n"
+	helpMessage += "\n"
+	helpMessage += fmt.Sprintf("\t%s <command> [arguments]\n", c.name)
+	helpMessage += "\n"
+	helpMessage += "The commands are:\n"
+	helpMessage += "\n"
+
+	for _, cmd := range c.subcommands {
+		flagSetField, err := inspectAndAccessFlagSetField(cmd)
+		if err != nil {
+			return "", err
+		}
+		descriptionField, err := inspectAndAccessDescriptionField(cmd)
+		if err != nil {
+			return "", err
+		}
+		helpMessage += fmt.Sprintf("\t%-15s %s\n", flagSetField.Name(), descriptionField)
+	}
+
+	helpMessage += "\n"
+	helpMessage += fmt.Sprintf("Use \"%s help <command>\" for more information about a command.\n", c.name)
+
+	return helpMessage, nil
+}
+
 func (c *Cli) helpHandler() error {
 	if len(c.args) <= 2 {
-		fmt.Println(c.help)
+		helpMessage, err := c.generateMainHelpMessage()
+		if err != nil {
+			return err
+		}
+		fmt.Println(helpMessage)
 		return nil
 	}
 
@@ -88,21 +132,23 @@ func (c *Cli) commandsHandler() error {
 			return err
 		}
 		if flagSetField.Name() == c.args[1] {
-			err := cmd.Init(c.args[2:])
+			err := flagSetField.Parse(c.args[2:])
 			if err != nil {
 				return err
 			}
 			return cmd.Run()
 		}
 	}
-	return fmt.Errorf("%s %s: Unknown command\nRun '%s help'.", c.name, c.args[1], c.name)
+	return fmt.Errorf("%s %s: Unknown command\nRun '%s help' for usage.", c.name, c.args[1], c.name)
 }
 
-func (c *Cli) Run(args []string) error {
+func (c *Cli) Execute(args []string) error {
 
 	c.args = append(c.args, args...)
 
-	if len(args) <= 1 || args[1] == "help" {
+	helpRegexp := regexp.MustCompile(`^-h|--help|-help|help$`)
+
+	if len(args) <= 1 || helpRegexp.MatchString(args[1]) {
 		return c.helpHandler()
 	}
 
@@ -110,9 +156,13 @@ func (c *Cli) Run(args []string) error {
 }
 
 func main() {
-	command := NewCli("tokenGo", help)
-	command.Add(passwordcli.NewPasswordCommand())
-	err := command.Run(os.Args)
+	app := &Cli{
+		name:        "tokenGo",
+		description: "TokenGo is a collection of commands to generate token.",
+	}
+	passwordSubCommand := passwordcli.NewPasswordCommand()
+	app.AddCommand(passwordSubCommand)
+	err := app.Execute(os.Args)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
