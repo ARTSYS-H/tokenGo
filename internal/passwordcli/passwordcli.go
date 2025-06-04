@@ -1,43 +1,30 @@
 package passwordcli
 
 import (
-	"flag"
 	"fmt"
 
 	"github.com/ARTSYS-H/tokenGo/pkg/password"
 )
 
-type PasswordCommand struct {
-	Fs             *flag.FlagSet
-	Generator      *password.Password
-	PasswordLength *int
-	Description    string
+type Password struct {
+	Length      int  `flag:"l" help:"Choose the password length."`
+	AllowRepeat bool `help:"Allow repeat in the password"`
 }
 
-func NewPasswordCommand() *PasswordCommand {
-	gen := password.NewPassword()
-	fs := flag.NewFlagSet("password", flag.ExitOnError)
-
-	passSize := fs.Int("l", 16, "Choose the password `length`.")
-
-	fs.BoolFunc("allowrepeat", "Allow repeat in the password. (default false)", func(s string) error {
-		gen.AllowRepeat = true
-		return nil
-	})
-
-	return &PasswordCommand{
-		Fs:             fs,
-		Generator:      gen,
-		PasswordLength: passSize,
-		Description:    "generate a password string",
+func NewPasswordCommand() *Password {
+	return &Password{
+		Length:      16,
+		AllowRepeat: false,
 	}
 }
 
-func (sb *PasswordCommand) Run() error {
-	generatedPassword, err := sb.Generator.Generate(*sb.PasswordLength)
+func (sb *Password) Run() error {
+	generator := password.NewPassword()
+	generator.AllowRepeat = sb.AllowRepeat
+	password, err := generator.Generate(sb.Length)
 	if err != nil {
 		return err
 	}
-	fmt.Println(generatedPassword)
+	fmt.Println(password)
 	return nil
 }
