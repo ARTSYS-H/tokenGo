@@ -10,7 +10,7 @@ import (
 
 func main() {
 	app := crow.New("tokenGo", "TokenGo is a collection of commands to generate token.")
-	err := app.AddCommmand(passwordcli.NewPasswordCommand(), "generate a passwod string")
+	err := app.AddCommand(passwordcli.NewPasswordCommand(), "generate a passwod string")
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
